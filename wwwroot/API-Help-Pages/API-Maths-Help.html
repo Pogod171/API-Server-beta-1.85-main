@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>localhost:5000/api/maths?</title>
+</head>
+<body>
+    <h2>GET : Maths endpoint</h2>
+    <h2>List of possible query strings:</h2>
+    <hr>
+    <h3>? op = + & x = number & y = number</h3>
+    <h3>return {"op" : "+", "x":number, "y":number, "value": x + y}</h3>
+    <br>
+    <h3>? op = - & x = number & y = number</h3>
+    <h3>return {"op" : "-", "x":number, "y":number, "value": x - y}</h3>
+    <br>
+    <h3>? op = * & x = number & y = number</h3>
+    <h3>return {"op" : "*", "x":number, "y":number, "value": x * y}</h3>
+    <br>
+    <h3>? op = / & x = number & y = number</h3>
+    <h3>return {"op" : "/", "x":number, "y":number, "value": x / y}</h3>
+    <br>
+    <h3>? op = % & x = number & y = number</h3>
+    <h3>return {"op" : "%", "x":number, "y":number, "value": x % y}</h3>
+    <br>
+    <h3>? op = ! & n = integer</h3>
+    <h3>return {"op" : "!", "n":integer, "value": n!}</h3>
+    <br>
+    <h3>? op = p & n = integer</h3>
+    <h3>return {"op" : "p", "n":integer, "value": true if n is a prime number}</h3>
+    <br>
+    <h3>? op = np & n = integer</h3>
+    <h3>return {"op" : "np", "n":integer, "value": nth prime number}</h3>
+
+</body>
+</html>
