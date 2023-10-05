@@ -1,21 +1,25 @@
 import Controller from "./Controller.js";
+import path from "path";
+import fs from "fs";
 
 export default class MathsController extends Controller {
   constructor(HttpContext) {
     super(HttpContext);
+    this.params = this.HttpContext.path.params;
+    this.nbParams = Object.keys(this.params).length;
   }
 
-  get() {
-    const op = this.HttpContext.path.params.op;
+  doOperation() {
+    let op = this.params.op;
+    const x = parseFloat(this.params.x);
+    const y = parseFloat(this.params.y);
+    const n = parseFloat(this.params.n);
+    let result;
+    let error;
 
-    if (op != null) {
-      let result;
-      let error;
-
-      if (op === "!") {
-        const n = parseFloat(this.HttpContext.path.params.n);
-
-        if (!isNaN(n)) {
+    switch (op) {
+      case "!":
+        if (!isNaN(n) && Number.isSafeInteger(n)) {
           if (n < 0) {
             error = "La factorielle n'est pas définie pour les nombres négatifs.";
           } else {
@@ -25,18 +29,16 @@ export default class MathsController extends Controller {
             }
           }
         } else {
-          error = "Paramètre 'n' invalide. 'n' doit être un nombre valide.";
+          error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
         }
-      } else if (op === "p") {
-        const n = parseFloat(this.HttpContext.path.params.n);
+        break;
 
-        if (!isNaN(n)) {
+      case "p":
+        if (!isNaN(n) && Number.isSafeInteger(n)) {
           if (n <= 1) {
             result = false;
-          } else if (n <= 3) {
+          } else if (n <= 3 || n % 2 === 0 || n % 3 === 0) {
             result = true;
-          } else if (n % 2 === 0 || n % 3 === 0) {
-            result = false;
           } else {
             let i = 5;
             while (i * i <= n) {
@@ -46,15 +48,14 @@ export default class MathsController extends Controller {
               }
               i += 6;
             }
-            result = true;
           }
         } else {
-          error = "Paramètre 'n' invalide. 'n' doit être un nombre valide.";
+          error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
         }
-      }else if (op === "np") {
-        const n = parseFloat(this.HttpContext.path.params.n);
+        break;
 
-        if (!isNaN(n)) {
+      case "np":
+        if (!isNaN(n) && Number.isSafeInteger(n)) {
           if (n <= 0) {
             error = "Entrée invalide. 'n' doit être un entier positif.";
           } else {
@@ -72,53 +73,75 @@ export default class MathsController extends Controller {
             }
           }
         } else {
-          error = "Paramètre 'n' invalide. 'n' doit être un nombre valide.";
+          error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
         }
-      }
-      else if ([' ', "-", "*", "/", "%"].includes(op)) {
-        const x = parseFloat(this.HttpContext.path.params.x);
-        const y = parseFloat(this.HttpContext.path.params.y);
+        break;
 
+      case " ":
         if (!isNaN(x) && !isNaN(y)) {
-          switch (op) {
-            case " ":
-              result = x + y;
-              break;
-            case "-":
-              result = x - y;
-              break;
-            case "*":
-              result = x * y;
-              break;
-            case "/":
-              if (y !== 0) {
-                result = x / y;
-              } else {
-                error = "La division par zéro n'est pas autorisée.";
-              }
-              break;
-            case "%":
-              result = x % y;
-              break;
-          }
+          result = x + y;
         } else {
-          error = "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
+          error =
+            "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
         }
-      } else {
-        error = "Opérateur invalide. Les opérateurs supportés sont '+', '-', '*', '/', '%', et '!'.";
-      }
+        break;
 
-      if (error != null) {
-        this.HttpContext.response.JSON({ op: op, error: error });
-      } else {
-        this.HttpContext.response.JSON({ op: op, value: result });
-      }
-    } else {
-      this.HttpContext.response.badRequest(
-        "Paramètre 'op' invalide ou manquant. Veuillez fournir un opérateur valide ('+', '-', '*', '/', '%', ou '!')."
-      );
+      case "-":
+        if (!isNaN(x) && !isNaN(y)) {
+          result = x - y;
+        } else {
+          error =
+            "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
+        }
+        break;
+
+      case "*":
+        if (!isNaN(x) && !isNaN(y)) {
+          result = x * y;
+        } else {
+          error =
+            "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
+        }
+        break;
+
+      case "/":
+        if (!isNaN(x) && !isNaN(y) && y !== 0) {
+          result = x / y;
+        } else if (y === 0) {
+          error = "La division par zéro n'est pas autorisée.";
+        } else {
+          error =
+            "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
+        }
+        break;
+
+      case "%":
+        if (!isNaN(x) && !isNaN(y) && y !== 0 && x !== 0) {
+          result = x % y;
+        } else if (y === 0 || x === 0) {
+          error = "Le modulo par zéro n'est pas autorisé.";
+        } else {
+          error =
+            "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
+        }
+        break;
+
+      default:
+        error =
+          "Opérateur invalide. Les opérateurs supportés sont '+', '-', '*', '/', '%', et '!'.";
+        break;
     }
+
+    let reponse;
+
+    if (error != null) {
+      reponse = { ...this.params, error: error };
+    } else {
+      reponse = { ...this.params, value: result };
+    }
+    this.HttpContext.response.JSON(reponse);
   }
+
   isPrime(n) {
     if (n <= 1) {
       return false;
@@ -137,5 +160,19 @@ export default class MathsController extends Controller {
       i += 6;
     }
     return true;
+  }
+
+  help() {
+    let helpPagePath = path.join(
+      process.cwd(),
+      wwwroot,
+      "API-Help-Pages/API-Maths-Help.html"
+    );
+    this.HttpContext.response.HTML(fs.readFileSync(helpPagePath));
+  }
+
+  get() {
+    if (this.HttpContext.path.queryString == "?") this.help();
+    else this.doOperation();
   }
 }
