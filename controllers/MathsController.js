@@ -16,17 +16,35 @@ export default class MathsController extends Controller {
     const n = parseFloat(this.params.n);
     let result;
     let error;
+    if (
+      (op === " " || op === "-" || op === "*" || op === "/" || op === "%") &&
+      this.nbParams !== 3
+    ) {
+      // Invalid number of parameters for x and y operations
+      error =
+        "Nombre incorrect de paramètres pour les opérations avec 'x' et 'y'. Il doit y avoir 4 paramètres.";
+    } else if (
+      (op === "!" || op === "p" || op === "np") &&
+      this.nbParams !== 2
+    ) {
+      // Invalid number of parameters for n operations
+      error =
+        "Nombre incorrect de paramètres pour les opérations avec 'n'. Il doit y avoir 3 paramètres.";
+    }
 
+    // Check if there is an error, and if so, prevent the switch block
+    if (error != null) {
+      this.HttpContext.response.JSON({ ...this.params, error: error });
+      return; // Exit the function early
+    }
     switch (op) {
       case "!":
         if (!isNaN(n) && Number.isSafeInteger(n)) {
           if (n < 0) {
-            error = "La factorielle n'est pas définie pour les nombres négatifs.";
+            error =
+              "La factorielle n'est pas définie pour les nombres négatifs.";
           } else {
-            result = 1;
-            for (let i = 1; i <= n; i++) {
-              result *= i;
-            }
+            result = this.factorial(n);
           }
         } else {
           error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
@@ -35,20 +53,7 @@ export default class MathsController extends Controller {
 
       case "p":
         if (!isNaN(n) && Number.isSafeInteger(n)) {
-          if (n <= 1) {
-            result = false;
-          } else if (n <= 3 || n % 2 === 0 || n % 3 === 0) {
-            result = true;
-          } else {
-            let i = 5;
-            while (i * i <= n) {
-              if (n % i === 0 || n % (i + 2) === 0) {
-                result = false;
-                break;
-              }
-              i += 6;
-            }
-          }
+          result = this.isPrime(n);
         } else {
           error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
         }
@@ -59,18 +64,7 @@ export default class MathsController extends Controller {
           if (n <= 0) {
             error = "Entrée invalide. 'n' doit être un entier positif.";
           } else {
-            let count = 0;
-            let num = 2;
-            while (true) {
-              if (this.isPrime(num)) {
-                count++;
-                if (count === n) {
-                  result = num;
-                  break;
-                }
-              }
-              num++;
-            }
+            result = this.findPrime(n);
           }
         } else {
           error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
@@ -105,10 +99,10 @@ export default class MathsController extends Controller {
         break;
 
       case "/":
-        if (!isNaN(x) && !isNaN(y) && y !== 0) {
+        if (!isNaN(x) && !isNaN(y) && y !== 0 && x !== 0) {
           result = x / y;
         } else if (y === 0) {
-          error = "La division par zéro n'est pas autorisée.";
+          result = x === 0 ? "NaN" : "Infinity";
         } else {
           error =
             "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
@@ -119,7 +113,7 @@ export default class MathsController extends Controller {
         if (!isNaN(x) && !isNaN(y) && y !== 0 && x !== 0) {
           result = x % y;
         } else if (y === 0 || x === 0) {
-          error = "Le modulo par zéro n'est pas autorisé.";
+          result = "NaN";
         } else {
           error =
             "Paramètres 'x' ou 'y' invalides. Les deux doivent être des nombres valides.";
@@ -135,31 +129,43 @@ export default class MathsController extends Controller {
     let reponse;
 
     if (error != null) {
-      reponse = { ...this.params, error: error };
+      reponse = {
+        ...this.params,
+        error: error,
+        op: op === " " ? "+" : op,
+      };
     } else {
-      reponse = { ...this.params, value: result };
+      reponse = {
+        ...this.params,
+        value: result,
+        op: op === " " ? "+" : op,
+      };
     }
     this.HttpContext.response.JSON(reponse);
   }
-
-  isPrime(n) {
-    if (n <= 1) {
-      return false;
+  factorial(n) {
+    if (n === 0 || n === 1) {
+      return 1;
     }
-    if (n <= 3) {
-      return true;
-    }
-    if (n % 2 === 0 || n % 3 === 0) {
-      return false;
-    }
-    let i = 5;
-    while (i * i <= n) {
-      if (n % i === 0 || n % (i + 2) === 0) {
+    return n * factorial(n - 1);
+  }
+  isPrime(value) {
+    for (var i = 2; i < value; i++) {
+      if (value % i === 0) {
         return false;
       }
-      i += 6;
     }
-    return true;
+    return value > 1;
+  }
+  findPrime(n) {
+    let primeNumer = 0;
+    for (let i = 0; i < n; i++) {
+      primeNumer++;
+      while (!isPrime(primeNumer)) {
+        primeNumer++;
+      }
+    }
+    return primeNumer;
   }
 
   help() {
