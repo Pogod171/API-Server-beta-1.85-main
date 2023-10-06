@@ -39,7 +39,7 @@ export default class MathsController extends Controller {
     }
     switch (op) {
       case "!":
-        if (!isNaN(n) && Number.isSafeInteger(n)) {
+        if (!isNaN(n) && Number.isSafeInteger(n) && n > 0) {
           if (n < 0) {
             error =
               "La factorielle n'est pas définie pour les nombres négatifs.";
@@ -52,7 +52,7 @@ export default class MathsController extends Controller {
         break;
 
       case "p":
-        if (!isNaN(n) && Number.isSafeInteger(n)) {
+        if (!isNaN(n) && Number.isSafeInteger(n) && n > 0) {
           result = this.isPrime(n);
         } else {
           error = "Paramètre 'n' invalide. 'n' doit être un nombre entier.";
@@ -60,7 +60,7 @@ export default class MathsController extends Controller {
         break;
 
       case "np":
-        if (!isNaN(n) && Number.isSafeInteger(n)) {
+        if (!isNaN(n) && Number.isSafeInteger(n) && n > 0) {
           if (n <= 0) {
             error = "Entrée invalide. 'n' doit être un entier positif.";
           } else {
